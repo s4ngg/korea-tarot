@@ -235,6 +235,66 @@ h1.title {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.readingResult {
+  max-width: 920px;
+  margin: 48px auto;
+  padding: 40px;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  line-height: 1.8;
+}
+
+.resultHero {
+  max-width: 760px;
+}
+
+.resultCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.miniTarotCard {
+  display: grid;
+  min-height: 210px;
+  align-content: space-between;
+  padding: 18px;
+  border: 1px solid rgba(201, 168, 76, 0.34);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(201, 168, 76, 0.2), transparent 54%),
+    linear-gradient(180deg, rgba(63, 22, 88, 0.95), rgba(28, 8, 45, 0.98));
+}
+
+.miniTarotCard span,
+.miniTarotCard em {
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.miniTarotCard strong {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+}
+
+.miniTarotCard small {
+  color: rgba(229, 226, 225, 0.64);
+}
+
+.resultSections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.resultSection {
+  padding: 20px;
+}
+
 .adviceBox h2,
 .readingCard h2 {
   margin: 0 0 8px;
@@ -243,12 +303,85 @@ h1.title {
 
 .readingGrid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
 }
 
 .readingCard {
   display: block;
   padding: 24px;
+}
+
+.readingCard span,
+.readingCard small {
+  color: var(--color-accent);
+}
+
+.pageActions,
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.mypageGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.7fr);
+  gap: 20px;
+  max-width: 980px;
+  margin: 48px auto 0;
+}
+
+.profilePanel,
+.statPanel,
+.latestPanel {
+  padding: 32px;
+}
+
+.profilePanel {
+  grid-row: span 2;
+}
+
+.profilePanel dl {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 0;
+}
+
+.profilePanel div {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 16px;
+}
+
+.profilePanel dt,
+.statPanel span {
+  color: rgba(229, 226, 225, 0.62);
+}
+
+.profilePanel dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.statPanel strong {
+  display: block;
+  margin: 10px 0;
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.latestPanel h2 {
+  margin-top: 0;
+}
+
+.quickActions {
+  max-width: 980px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .readingCard:hover {
@@ -288,8 +421,19 @@ h1.title {
   }
 
   .authCard,
-  .resultCard {
+  .resultCard,
+  .readingResult {
     margin: 24px auto;
     padding: 28px;
+  }
+
+  .resultCards,
+  .resultSections,
+  .mypageGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profilePanel {
+    grid-row: auto;
   }
 }
