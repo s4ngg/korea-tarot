@@ -58,6 +58,11 @@ button {
   font-family: var(--font-body);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 input, textarea {
   font-family: var(--font-body);
 }
@@ -127,4 +132,20 @@ img {
   font-size: 14px;
   background: var(--color-primary);
   padding: 0 10px;
+}
+
+.fadeIn {
+  animation: fade 0.8s ease;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
