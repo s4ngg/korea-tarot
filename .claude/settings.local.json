@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\adminn\\\\Desktop\\\\korea-tarot\\\\.claude\\\\worktrees\\\\practical-ritchie-0cdb5b\\\\backend\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(ConvertTo-Csv -NoTypeInformation)",
+      "Bash(Out-String)",
+      "Bash(git add *)"
+    ]
+  }
+}
