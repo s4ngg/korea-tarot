@@ -1,4 +1,4 @@
-# AI Server 스펙
+# AI Server 명세
 
 ## 1. 기술 스택
 
@@ -14,7 +14,32 @@
 
 ---
 
-## 2. 디렉토리 구조
+## 2. 기능 요구사항
+
+| ID | 요구사항 |
+|----|----------|
+| FR-AI-01 | 서버 시작 시 FAISS 인덱스가 없으면 78장 카드를 자동으로 벡터화하여 저장해야 한다 |
+| FR-AI-02 | 인덱스가 이미 존재하면 파일을 로드하여 사용해야 한다 (재벡터화 방지) |
+| FR-AI-03 | 카드 이름 3개와 고민 텍스트를 입력받아 AI 해석을 생성해야 한다 |
+| FR-AI-04 | 해석 생성 시 FAISS에서 각 카드의 컨텍스트를 검색하여 프롬프트에 포함해야 한다 |
+| FR-AI-05 | 관리자 요청으로 카드 벡터 인덱스를 재구축할 수 있어야 한다 |
+| FR-AI-06 | cards 목록이 비어있으면 400을 반환해야 한다 |
+
+---
+
+## 3. 제약 조건
+
+| 항목 | 제약 |
+|------|------|
+| 입력 카드 수 | 정확히 3개 (Spring Boot에서 사전 검증) |
+| 해석 길이 | 프롬프트에서 500자 내외 지정 |
+| 인증 | 없음 (내부 서버 간 통신, 외부 미노출) |
+| 인덱스 파일 | `faiss_index/` 디렉토리, git에서 제외 |
+| OpenAI 타임아웃 | Spring Boot RestClient에서 30초 설정 |
+
+---
+
+## 4. 디렉토리 구조
 
 ```
 ai-server/
@@ -28,16 +53,26 @@ ai-server/
 ├── data/
 │   └── tarot_cards.json   # 78장 카드 원본 데이터
 ├── faiss_index/           # 빌드된 인덱스 저장 (git 제외)
-│   ├── tarot.index        # FAISS 인덱스 파일
-│   └── metadata.pkl       # 카드명 ↔ 벡터 ID 매핑
+│   ├── tarot.index
+│   └── metadata.pkl
 ├── requirements.txt
 ├── .env                   # 실제 환경변수 (git 제외)
-└── .env.example           # 환경변수 템플릿
+└── .env.example
 ```
 
 ---
 
-## 3. 카드 데이터 스키마 (`tarot_cards.json`)
+## 5. 환경변수
+
+```bash
+# .env.example
+OPENAI_API_KEY=sk-...
+FAISS_INDEX_PATH=./faiss_index
+```
+
+---
+
+## 6. 카드 데이터 스키마 (`tarot_cards.json`)
 
 ```json
 [
@@ -56,108 +91,89 @@ ai-server/
 ]
 ```
 
-**총 78장 구성:**
-- Major Arcana: 22장 (The Fool ~ The World, number 0~21)
-- Minor Arcana: 56장 (Ace~King × 4 Suit)
-  - Wands: 14장 (불, 창의성, 열정)
-  - Cups: 14장 (물, 감정, 관계)
-  - Swords: 14장 (공기, 사고, 갈등)
-  - Pentacles: 14장 (땅, 물질, 현실)
+**총 78장 구성**
+
+| 분류 | 장수 | 설명 |
+|------|------|------|
+| Major Arcana | 22장 | The Fool(0) ~ The World(21) |
+| Wands (Minor) | 14장 | 불, 창의성, 열정 |
+| Cups (Minor) | 14장 | 물, 감정, 관계 |
+| Swords (Minor) | 14장 | 공기, 사고, 갈등 |
+| Pentacles (Minor) | 14장 | 땅, 물질, 현실 |
 
 ---
 
-## 4. 환경변수
+## 7. RAG 파이프라인
 
-```bash
-# .env.example
-OPENAI_API_KEY=sk-...
-FAISS_INDEX_PATH=./faiss_index
+### 7-1. 서버 시작 흐름 (lifespan)
+
+```
+서버 시작
+  └─ faiss_index/ 파일 존재 여부 확인
+       ├─ 없음 → build_and_save_index() 실행 → 78장 벡터화 + 저장
+       └─ 있음 → 기존 인덱스 로드 (재벡터화 스킵)
 ```
 
----
-
-## 5. 서버 시작 흐름 (lifespan)
-
-```python
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # startup
-    if not is_index_built():          # faiss_index/ 파일 존재 여부 확인
-        count = build_and_save_index()  # 78장 벡터화 + 저장
-        logger.info(f"벡터 인덱스 구축 완료: {count}장")
-    else:
-        logger.info("기존 벡터 인덱스 로드")
-    yield
-    # shutdown (정리 작업 없음)
-```
-
----
-
-## 6. RAG 파이프라인 상세
-
-### 6-1. 인덱스 구축 (`build_and_save_index`)
+### 7-2. 인덱스 구축 (`build_and_save_index`)
 
 ```
 1. tarot_cards.json 로드
-2. 각 카드에 대해 build_card_document(card) 호출
-   → "카드명: The Fool (광대)\n정방향: ...\n역방향: ...\n상징: ...\n설명: ..."
-3. OpenAI text-embedding-3-small 배치 임베딩
-   → shape: (78, 1536)
-4. faiss.normalize_L2(vectors)  # L2 정규화 → IndexFlatIP = 코사인 유사도
+2. 각 카드 → build_card_document(card)
+   "카드명: The Fool (광대)\n정방향: ...\n역방향: ...\n상징: ...\n설명: ..."
+3. OpenAI text-embedding-3-small 배치 임베딩 → shape (78, 1536)
+4. faiss.normalize_L2(vectors)  ← L2 정규화 → IndexFlatIP = 코사인 유사도
 5. IndexFlatIP(1536).add(vectors)
 6. faiss_index/tarot.index 저장
-7. faiss_index/metadata.pkl 저장 (list[str]: 카드명 순서)
+7. faiss_index/metadata.pkl 저장 (카드명 순서 list[str])
 ```
 
-### 6-2. 카드 검색 (`search_card_contexts`)
+### 7-3. 카드 컨텍스트 검색 (`search_card_contexts`)
 
 ```
-입력: card_names: list[str]  (e.g. ["The Fool", "The Lovers", "Wheel of Fortune"])
+입력: card_names: list[str]  (["The Fool", "The Lovers", "Wheel of Fortune"])
 
 각 카드명에 대해:
-1. OpenAI text-embedding-3-small 임베딩
-2. faiss.normalize_L2(query_vector)
-3. index.search(query_vector, k=1)  → top-1 유사 카드 컨텍스트
-4. metadata[idx] → 카드명 → 원본 문서 반환
+  1. OpenAI text-embedding-3-small 임베딩
+  2. faiss.normalize_L2(query_vector)
+  3. index.search(query_vector, k=1) → top-1 유사 카드
+  4. metadata[idx] → 카드명 → 원본 문서 반환
 
 반환: list[str] (카드별 컨텍스트 문서 3개)
 ```
 
-### 6-3. GPT 호출 (`generate_interpretation`)
+### 7-4. GPT 해석 생성 (`generate_interpretation`)
 
+**시스템 프롬프트**
 ```
-입력:
-  - concern: str (사용자 고민)
-  - card_contexts: list[str] (카드 컨텍스트 3개)
-
-시스템 프롬프트:
-  "당신은 전문 타로 상담사입니다.
-   사용자의 고민과 선택한 카드의 의미를 바탕으로
-   따뜻하고 통찰력 있는 상담 결과를 제공하세요.
-   결과는 500자 내외로 작성하세요."
-
-유저 메시지:
-  "사용자 고민: {concern}
-   
-   선택한 카드:
-   1. {card_contexts[0]}
-   2. {card_contexts[1]}
-   3. {card_contexts[2]}"
-
-모델: gpt-4o-mini
-반환: interpretation (str)
+당신은 전문 타로 상담사입니다.
+사용자의 고민과 선택한 카드의 의미를 바탕으로
+따뜻하고 통찰력 있는 상담 결과를 제공하세요.
+결과는 500자 내외로 작성하세요.
 ```
+
+**유저 메시지 구조**
+```
+사용자 고민: {concern}
+
+선택한 카드:
+1. {card_contexts[0]}
+2. {card_contexts[1]}
+3. {card_contexts[2]}
+```
+
+**모델:** `gpt-4o-mini`
 
 ---
 
-## 7. API 명세
+## 8. API 명세
 
 ### `POST /ai/interpret` — 타로 해석 생성
 
 - 호출자: Spring Boot (RestClient)
-- 인증: 없음 (내부 서버 간 통신)
+- 인증: 없음
 
-**Request Body:**
+**Request Body**
+
 ```json
 {
   "concern_text": "연애 문제로 고민 중입니다.",
@@ -167,41 +183,40 @@ async def lifespan(app: FastAPI):
 
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|------|------|
-| `concern_text` | string | O | 사용자 고민 (Spring의 `@JsonProperty("concern_text")` 매핑) |
-| `cards` | list[str] | O | 카드 영문명 배열 (정확히 3개) |
+| concern_text | string | O | 사용자 고민 |
+| cards | list[str] | O | 카드 영문명 배열 |
 
-**Response `200`:**
+**Response 200**
 ```json
-{
-  "interpretation": "당신의 과거에서 나타난 광대 카드는..."
-}
+{ "interpretation": "당신의 과거에서 나타난 광대 카드는..." }
 ```
 
-**에러 Response:**
-```json
-{ "detail": "카드 이름 목록이 비어있습니다." }   // 400
-{ "detail": "AI 서버 내부 오류" }               // 500
-```
+**에러 케이스**
+
+| 조건 | HTTP | 응답 |
+|------|------|------|
+| cards 빈 배열 | 400 | `{ "detail": "카드 이름 목록이 비어있습니다." }` |
+| 내부 오류 | 500 | `{ "detail": "AI 서버 내부 오류" }` |
 
 ---
 
 ### `POST /ai/vectorize` — 카드 벡터 인덱스 재구축
 
-- 호출자: 수동 (관리자) 또는 서버 시작 시 자동
+- 호출자: 수동 (관리자)
 - 인증: 없음
 
 **Request Body:** 없음
 
-**Response `200`:**
+**Response 200**
 ```json
 { "message": "벡터화 완료", "count": 78 }
 ```
 
 ---
 
-## 8. Spring Boot ↔ AI Server 연동
+## 9. Spring Boot ↔ AI Server 연동
 
-**Spring Boot 측 (`AiInterpretRequestDto`)**
+**AiInterpretRequestDto (Spring Boot)**
 ```java
 public class AiInterpretRequestDto {
     @JsonProperty("concern_text")
@@ -210,7 +225,7 @@ public class AiInterpretRequestDto {
 }
 ```
 
-**Spring Boot RestClient 호출 예시**
+**RestClient 호출**
 ```java
 AiInterpretResponseDto response = aiRestClient
     .post()
@@ -220,27 +235,21 @@ AiInterpretResponseDto response = aiRestClient
     .body(AiInterpretResponseDto.class);
 ```
 
-- AI 서버 baseURL: `http://localhost:8000` (application.yml `ai.server.url`)
-- 타임아웃: 30초 권장 (GPT 응답 지연 대비)
-- 실패 시: `BusinessException(ErrorCode.AI_SERVER_ERROR)` → 502
+| 항목 | 값 |
+|------|-----|
+| AI 서버 baseURL | `http://localhost:8000` (application.yml `ai.server.url`) |
+| 타임아웃 | 30초 |
+| 실패 처리 | `BusinessException(ErrorCode.AI_SERVER_ERROR)` → 502 |
 
 ---
 
-## 9. 개발/실행 방법
+## 10. 실행 방법
 
 ```bash
-# 가상환경
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-
-# 의존성 설치
+source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# .env 설정
-cp .env.example .env
-# OPENAI_API_KEY=sk-... 입력
-
-# 서버 실행 (포트 8000)
+cp .env.example .env          # OPENAI_API_KEY 입력
 uvicorn main:app --reload --port 8000
 ```
 
