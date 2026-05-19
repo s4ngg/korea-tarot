@@ -1,108 +1,126 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getCards, createReading } from '../api/tarotApi';
+import Starfield from '../components/common/Starfield/Starfield';
 import styles from './TarotPage.module.css';
 
-const tarotCards = [
-  { id: 0, roman: '0', name: '바보', english: 'The Fool', keyword: '시작' },
-  { id: 1, roman: 'I', name: '마법사', english: 'The Magician', keyword: '의지' },
-  { id: 2, roman: 'II', name: '여사제', english: 'The High Priestess', keyword: '직감' },
-  { id: 3, roman: 'III', name: '여황제', english: 'The Empress', keyword: '풍요' },
-  { id: 4, roman: 'IV', name: '황제', english: 'The Emperor', keyword: '질서' },
-  { id: 5, roman: 'V', name: '교황', english: 'The Hierophant', keyword: '신뢰' },
-  { id: 6, roman: 'VI', name: '연인', english: 'The Lovers', keyword: '선택' },
-  { id: 7, roman: 'VII', name: '전차', english: 'The Chariot', keyword: '전진' },
-  { id: 8, roman: 'VIII', name: '힘', english: 'Strength', keyword: '용기' },
-  { id: 9, roman: 'IX', name: '은둔자', english: 'The Hermit', keyword: '성찰' },
-  { id: 10, roman: 'X', name: '운명의 수레바퀴', english: 'Wheel of Fortune', keyword: '전환' },
-  { id: 11, roman: 'XI', name: '정의', english: 'Justice', keyword: '균형' },
-  { id: 12, roman: 'XII', name: '매달린 사람', english: 'The Hanged Man', keyword: '관점' },
-  { id: 13, roman: 'XIII', name: '죽음', english: 'Death', keyword: '변화' },
-  { id: 14, roman: 'XIV', name: '절제', english: 'Temperance', keyword: '조율' },
-  { id: 15, roman: 'XV', name: '악마', english: 'The Devil', keyword: '집착' },
-  { id: 16, roman: 'XVI', name: '탑', english: 'The Tower', keyword: '해방' },
-  { id: 17, roman: 'XVII', name: '별', english: 'The Star', keyword: '희망' },
-  { id: 18, roman: 'XVIII', name: '달', english: 'The Moon', keyword: '불안' },
-  { id: 19, roman: 'XIX', name: '태양', english: 'The Sun', keyword: '활력' },
-  { id: 20, roman: 'XX', name: '심판', english: 'Judgement', keyword: '각성' },
-  { id: 21, roman: 'XXI', name: '세계', english: 'The World', keyword: '완성' },
-];
+const MAX_CARDS = 3;
 
-export default function TarotPage() {
-  const [selected, setSelected] = useState([]);
+function TarotPage() {
   const navigate = useNavigate();
+  const [concern, setConcern] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  const selectedCards = useMemo(
-    () => selected.map((id) => tarotCards.find((card) => card.id === id)).filter(Boolean),
-    [selected],
-  );
+  const { data: cardsRes, isLoading } = useQuery({
+    queryKey: ['tarot-cards'],
+    queryFn: getCards,
+  });
 
-  const toggle = (id) => {
-    setSelected((previous) => {
-      if (previous.includes(id)) {
-        return previous.filter((value) => value !== id);
-      }
+  const cards = cardsRes?.data?.data || [];
 
-      return previous.length < 3 ? [...previous, id] : previous;
+  const readingMutation = useMutation({
+    mutationFn: createReading,
+    onSuccess: (res) => {
+      navigate('/tarot/result', { state: { reading: res.data.data } });
+    },
+  });
+
+  const toggleCard = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) return prev.filter(v => v !== id);
+      if (prev.length >= MAX_CARDS) return prev;
+      return [...prev, id];
     });
   };
 
-  const submit = () => {
-    localStorage.setItem('selectedTarotCards', JSON.stringify(selectedCards));
-    navigate('/tarot/result/1');
+  const canSubmit = selectedIds.length === MAX_CARDS && concern.trim().length > 0;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    readingMutation.mutate({ concernText: concern, cardIds: selectedIds });
   };
 
   return (
-    <main className='page fadeIn'>
-      <section className={styles.heading}>
-        <div>
-          <p className='eyebrow'>Three card spread</p>
-          <h1 className='title'>카드를 선택하세요</h1>
-          <p className='pageLead'>현재의 고민을 떠올리며 3장의 카드를 고르세요.</p>
-        </div>
-        <div className={styles.counter}>{selected.length}/3</div>
-      </section>
+    <div className={styles.page}>
+      <Starfield />
 
-      <div className={styles.grid}>
-        {tarotCards.map((card) => {
-          const isSelected = selected.includes(card.id);
-
-          return (
-            <button
-              key={card.id}
-              type='button'
-              onClick={() => toggle(card.id)}
-              className={`${styles.card} ${isSelected ? styles.selected : ''}`}
-              aria-pressed={isSelected}
-              aria-label={`${card.name} 카드 선택`}
-            >
-              <span className={styles.roman}>{card.roman}</span>
-              <span className={styles.symbol} aria-hidden='true'>✦</span>
-              <span className={styles.name}>{card.name}</span>
-              <span className={styles.english}>{card.english}</span>
-              <span className={styles.keyword}>{card.keyword}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <aside className={styles.selectionPanel}>
-        <div>
-          <h2>선택한 카드</h2>
-          <p>
-            {selectedCards.length > 0
-              ? selectedCards.map((card) => card.name).join(' · ')
-              : '아직 선택한 카드가 없습니다.'}
+      <main className={styles.main}>
+        <section className={styles.concernSection}>
+          <h1 className={styles.pageTitle}>당신의 운명을 물어보세요</h1>
+          <div className={styles.textareaWrap}>
+            <textarea
+              className={styles.textarea}
+              placeholder="고민을 입력하세요..."
+              value={concern}
+              onChange={e => setConcern(e.target.value.slice(0, 500))}
+              maxLength={500}
+            />
+            <span className={styles.charCount}>{concern.length}/500</span>
+          </div>
+          <p className={styles.concernHint}>
+            진실된 마음으로 질문을 입력할수록 카드는 더 명확한 답을 줍니다.
           </p>
-        </div>
-        <button
-          type='button'
-          disabled={selected.length !== 3}
-          className={styles.button}
-          onClick={submit}
-        >
-          결과 보기
-        </button>
-      </aside>
-    </main>
+        </section>
+
+        <section className={styles.gridSection}>
+          <div className={styles.gridHeader}>
+            <div>
+              <h2 className={styles.gridTitle}>운명의 카드 선택</h2>
+              <p className={styles.gridSubtitle}>신중하게 3장의 카드를 선택해 주세요.</p>
+            </div>
+            <div className={styles.selectedCount}>
+              <span className={selectedIds.length === MAX_CARDS ? styles.countFull : styles.count}>
+                {selectedIds.length}
+              </span>
+              <span className={styles.countDivider}> / {MAX_CARDS}</span>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className={styles.loading}>카드를 불러오는 중...</div>
+          ) : (
+            <div className={styles.grid}>
+              {cards.map((card) => {
+                const isSelected = selectedIds.includes(card.id);
+                const isDisabled = !isSelected && selectedIds.length >= MAX_CARDS;
+                return (
+                  <button
+                    key={card.id}
+                    className={`${styles.card} ${isSelected ? styles.cardSelected : ''} ${isDisabled ? styles.cardDisabled : ''}`}
+                    onClick={() => toggleCard(card.id)}
+                    disabled={isDisabled}
+                    title={card.nameKr || card.name}
+                    type="button"
+                  >
+                    <div className={styles.cardInner}>
+                      <span className={styles.cardStar}>✦</span>
+                    </div>
+                    {isSelected && <div className={styles.cardShimmer} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className={styles.ctaSection}>
+          <button
+            className={`${styles.submitBtn} ${canSubmit ? styles.submitBtnActive : ''}`}
+            disabled={!canSubmit || readingMutation.isPending}
+            onClick={handleSubmit}
+          >
+            {readingMutation.isPending ? '영적 에너지를 모으는 중...' : '해석 받기'}
+          </button>
+          {readingMutation.isError && (
+            <p className={styles.error}>
+              {readingMutation.error?.response?.data?.message || '오류가 발생했습니다. 다시 시도해 주세요.'}
+            </p>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }
+
+export default TarotPage;

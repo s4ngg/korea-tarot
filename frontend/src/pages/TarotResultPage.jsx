@@ -1,57 +1,88 @@
-import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { fetchReadingResult } from '../services/api';
+import { useEffect } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import Starfield from '../components/common/Starfield/Starfield';
+import styles from './TarotResultPage.module.css';
 
-export default function TarotResultPage() {
-  const { id } = useParams();
-  const { data, isLoading } = useQuery({
-    queryKey: ['reading', id || 'latest'],
-    queryFn: () => fetchReadingResult(id),
-  });
+const POSITIONS = ['과거', '현재', '미래'];
 
-  if (isLoading) {
-    return <main className='page'>결과를 불러오는 중입니다.</main>;
-  }
+function TarotResultPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const reading = location.state?.reading;
+
+  useEffect(() => {
+    if (!reading) navigate('/tarot', { replace: true });
+  }, [reading, navigate]);
+
+  if (!reading) return null;
+
+  const cards = [...(reading.cards || [])].sort((a, b) => a.cardOrder - b.cardOrder);
 
   return (
-    <main className='page fadeIn'>
-      <article className='readingResult'>
-        <header className='resultHero'>
-          <p className='eyebrow'>Reading result</p>
-          <h1 className='title'>{data.title}</h1>
-          <p>{data.interpretation}</p>
+    <div className={styles.page}>
+      <Starfield />
+
+      <main className={styles.main}>
+        <header className={styles.pageHeader}>
+          <h1 className={styles.pageTitle}>타로 해석 결과</h1>
+          <div className={styles.divider} />
         </header>
 
-        <section className='resultCards' aria-label='선택한 카드'>
-          {data.cards.map((card) => (
-            <div key={card.id} className='miniTarotCard'>
-              <span>{card.roman}</span>
-              <strong>{card.name}</strong>
-              <small>{card.english}</small>
-              <em>{card.keyword}</em>
+        <section className={styles.cardsSection}>
+          {cards.map((card, idx) => (
+            <div
+              key={card.cardId ?? idx}
+              className={`${styles.cardItem} ${idx === 1 ? styles.cardItemCenter : ''}`}
+              style={{ animationDelay: `${(idx + 1) * 0.2}s` }}
+            >
+              <div className={`${styles.cardVisual} ${idx === 1 ? styles.cardVisualCenter : ''}`}>
+                <div className={styles.cardBack}>
+                  <span className={styles.cardBackIcon}>✦</span>
+                </div>
+                <div className={styles.cardLabel}>
+                  <span className={styles.cardPosition}>{POSITIONS[idx]}</span>
+                </div>
+                {idx === 1 && <div className={styles.cardGlow} />}
+              </div>
+              <h3 className={`${styles.cardName} ${idx === 1 ? styles.cardNameCenter : ''}`}>
+                {POSITIONS[idx]}: {card.nameKr || card.name}
+              </h3>
             </div>
           ))}
         </section>
 
-        <section className='resultSections'>
-          {data.sections.map((section) => (
-            <div key={section.title} className='cardGlass resultSection'>
-              <h2>{section.title}</h2>
-              <p>{section.body}</p>
+        <section className={styles.interpretSection}>
+          <div className={styles.scrollTop} />
+          <div className={styles.scrollBody}>
+            <div className={styles.scrollBgIcon}>✦</div>
+            <div className={styles.scrollContent}>
+              <h2 className={styles.scrollTitle}>
+                <span>✦</span>
+                운명의 속삭임
+                <span>✦</span>
+              </h2>
+              <div className={styles.interpretText}>
+                {reading.interpretation}
+              </div>
             </div>
-          ))}
+          </div>
+          <div className={styles.scrollBottom} />
         </section>
 
-        <section className='adviceBox'>
-          <h2>오늘의 조언</h2>
-          <p>{data.advice}</p>
+        <section className={styles.actions}>
+          <Link to="/mypage/readings" className={styles.primaryBtn}>
+            📖 기록 보러가기
+          </Link>
+          <button
+            className={styles.secondaryBtn}
+            onClick={() => navigate('/tarot')}
+          >
+            ↺ 다시 상담하기
+          </button>
         </section>
-
-        <div className='pageActions'>
-          <Link className='secondaryAction' to='/tarot'>다시 선택</Link>
-          <Link className='primaryAction' to='/readings'>상담 기록 보기</Link>
-        </div>
-      </article>
-    </main>
+      </main>
+    </div>
   );
 }
+
+export default TarotResultPage;

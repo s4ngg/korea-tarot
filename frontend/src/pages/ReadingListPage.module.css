@@ -1,0 +1,232 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-background);
+  position: relative;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 896px;
+  margin: 0 auto;
+  padding: 112px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.backBtn:hover {
+  color: var(--color-accent-bright);
+}
+
+.pageTitle {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-accent-bright);
+}
+
+.loading {
+  text-align: center;
+  padding: 64px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.emptyText {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+.startBtn {
+  padding: 14px 40px;
+  background: linear-gradient(135deg, #C9A84C 0%, #9E7D2E 100%);
+  color: #3d2e00;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 999px;
+  transition: all 0.3s;
+}
+
+.startBtn:hover {
+  box-shadow: 0 0 16px rgba(201, 168, 76, 0.4);
+  transform: translateY(-1px);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.readingCard {
+  background: rgba(26, 18, 38, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 168, 76, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.readingCard:hover {
+  border-color: rgba(201, 168, 76, 0.4);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.1);
+}
+
+.leftBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--color-accent-bright);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.readingCard:hover .leftBar {
+  opacity: 1;
+}
+
+.cardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cardLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: rgba(230, 195, 100, 0.7);
+}
+
+.concern {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.cardMinis {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardMini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.cardMiniInner {
+  width: 32px;
+  height: 48px;
+  background: var(--color-primary);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardMiniIcon {
+  font-size: 0.875rem;
+  color: rgba(201, 168, 76, 0.7);
+}
+
+.cardMiniName {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  max-width: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardRight {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.detailBtn {
+  padding: 10px 24px;
+  border: 1px solid var(--color-accent-bright);
+  color: var(--color-accent-bright);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.detailBtn:hover {
+  background: rgba(201, 168, 76, 0.1);
+}
+
+.deleteBtn {
+  padding: 6px 16px;
+  background: none;
+  border: 1px solid rgba(255, 180, 171, 0.3);
+  color: rgba(255, 180, 171, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: rgba(255, 180, 171, 0.1);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

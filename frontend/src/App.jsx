@@ -1,36 +1,70 @@
-import { Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Header from './components/common/Header/Header';
 import PrivateRoute from './components/PrivateRoute';
-import HomePage from './pages/HomePage';
+import MainPage from './pages/MainPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import SignupVerifyPage from './pages/SignupVerifyPage';
 import TarotPage from './pages/TarotPage';
 import TarotResultPage from './pages/TarotResultPage';
 import MyPage from './pages/MyPage';
 import ReadingListPage from './pages/ReadingListPage';
 import ReadingDetailPage from './pages/ReadingDetailPage';
+import NotFoundPage from './pages/NotFoundPage';
 
-export default function App() {
+function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path='/' element={<HomePage />} />
-        <Route path='/login' element={<LoginPage />} />
-        <Route path='/signup' element={<SignupPage />} />
-
-        <Route element={<PrivateRoute />}>
-          <Route path='/tarot' element={<TarotPage />} />
-          <Route path='/tarot/result' element={<TarotResultPage />} />
-          <Route path='/tarot/result/:id' element={<TarotResultPage />} />
-          <Route path='/mypage' element={<MyPage />} />
-          <Route path='/readings' element={<ReadingListPage />} />
-          <Route path='/readings/:id' element={<ReadingDetailPage />} />
-          <Route path='/mypage/readings' element={<ReadingListPage />} />
-          <Route path='/mypage/readings/:id' element={<ReadingDetailPage />} />
-        </Route>
-
-        <Route path='*' element={<HomePage />} />
-      </Route>
-    </Routes>
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/signup/verify" element={<SignupVerifyPage />} />
+        <Route
+          path="/tarot"
+          element={
+            <PrivateRoute>
+              <TarotPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/tarot/result"
+          element={
+            <PrivateRoute>
+              <TarotResultPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mypage"
+          element={
+            <PrivateRoute>
+              <MyPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mypage/readings"
+          element={
+            <PrivateRoute>
+              <ReadingListPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/mypage/readings/:id"
+          element={
+            <PrivateRoute>
+              <ReadingDetailPage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
+
+export default App;
