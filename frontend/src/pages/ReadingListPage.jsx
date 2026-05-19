@@ -10,6 +10,7 @@ export default function ReadingListPage() {
 
   return (
     <main className='page fadeIn'>
+      <p className='eyebrow'>Reading archive</p>
       <h1 className='title'>상담 기록</h1>
       {isLoading ? (
         <p>기록을 불러오는 중입니다.</p>
@@ -17,9 +18,10 @@ export default function ReadingListPage() {
         <div className='readingGrid'>
           {data.map((item) => (
             <Link key={item.id} to={`/readings/${item.id}`} className='cardGlass readingCard'>
+              <span>{item.date}</span>
               <h2>{item.title}</h2>
               <p>{item.summary}</p>
-              <small>{item.date}</small>
+              <small>{item.mood}</small>
             </Link>
           ))}
         </div>
