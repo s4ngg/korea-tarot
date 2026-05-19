@@ -2,9 +2,14 @@
   --color-background: #131313;
   --color-primary: #0F051D;
   --color-accent: #C9A84C;
+  --color-accent-bright: #e6c364;
   --color-text: #e5e2e1;
+  --color-text-muted: #cbc4cd;
   --color-surface: #201f1f;
+  --color-surface-low: #1c1b1b;
   --color-surface-high: #2a2a2a;
+  --color-surface-lowest: #0e0e0e;
+  --color-outline: #958f97;
   --color-error: #ffb4ab;
 
   --font-heading: 'Playfair Display', serif;
@@ -66,4 +71,60 @@ img {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+/* Shared utility classes (used across pages) */
+.glass-card {
+  background: rgba(15, 5, 29, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 168, 76, 0.05);
+}
+
+.gold-btn {
+  background: linear-gradient(135deg, #C9A84C 0%, #9E7D2E 100%);
+  color: #3d2e00;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.gold-btn:hover {
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+  transform: translateY(-1px);
+}
+
+.gold-btn:active {
+  transform: scale(0.97);
+}
+
+.gold-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.celestial-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  position: relative;
+  margin: 40px 0;
+}
+
+.celestial-divider::after {
+  content: "✦";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--color-accent);
+  font-size: 14px;
+  background: var(--color-primary);
+  padding: 0 10px;
 }

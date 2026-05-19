@@ -25,24 +25,14 @@ function Header() {
         <nav className={styles.nav}>
           {isAuthenticated ? (
             <>
-              <Link to="/tarot" className={styles.navLink}>
-                상담하기
-              </Link>
-              <Link to="/mypage" className={styles.navLink}>
-                마이페이지
-              </Link>
-              <button className={styles.logoutBtn} onClick={handleLogout}>
-                로그아웃
-              </button>
+              <Link to="/tarot" className={styles.navLink}>상담하기</Link>
+              <Link to="/mypage" className={styles.navLink}>마이페이지</Link>
+              <button className={styles.logoutBtn} onClick={handleLogout}>로그아웃</button>
             </>
           ) : (
             <>
-              <Link to="/login" className={styles.navLink}>
-                로그인
-              </Link>
-              <Link to="/signup" className={styles.navLink}>
-                회원가입
-              </Link>
+              <Link to="/login" className={styles.navLink}>로그인</Link>
+              <Link to="/signup" className={styles.ctaBtn}>회원가입</Link>
             </>
           )}
         </nav>
